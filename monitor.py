@@ -7,6 +7,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 # Define the necessary scopes
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -20,7 +21,7 @@ TEST_FILE_META_DATA = {
     'name': 'test',
     'mimeType': 'text/plain'
 }
-TIME_TO_WAIT = 5
+TIME_TO_WAIT = 15
 
 
 class GoogleDriveMonitor:
@@ -82,11 +83,11 @@ class GoogleDriveMonitor:
         """List all files in the user's Google Drive with paging"""
         time_of_check = self.get_current_timestamp()
 
-        _filter = f"createdTime >= '{self.last_checked}' and createdTime < '{time_of_check}'"
+        _filter = f"createdTime >= '{self.last_checked}' and createdTime <= '{time_of_check}'"
 
         results = self.service.files().list(
             pageSize=DEFAULT_PAGE_SIZE,
-            fields="nextPageToken, files(id, name, mimeType)",
+            # fields="nextPageToken, files(id, name, mimeType)",
             q=_filter
         ).execute()
 
@@ -144,27 +145,29 @@ class GoogleDriveMonitor:
 
     def get_default_sharing_permissions(self) -> None:
         """Get default permissions for a new file by creating a new one, check its permissions and removing it"""
+        try:
+            # Creation
+            file = self.service.files().create(
+                body=TEST_FILE_META_DATA
+            ).execute()
 
-        # Creation
-        file = self.service.files().create(
-            body=TEST_FILE_META_DATA
-        ).execute()
+            # Permissions checking
+            file_permissions = self.service.permissions().list(
+                fileId=file['id']
+            ).execute()
 
-        # Permissions checking
-        file_permissions = self.service.permissions().list(
-            fileId=file['id']
-        ).execute()
+            # Removing
+            self.service.files().delete(
+                fileId=file['id']
+            ).execute()
 
-        # Removing
-        self.service.files().delete(
-            fileId=file['id']
-        ).execute()
-
-        # Checks if 'anyone' appears as one of the permissions types
-        if 'anyone' in [_file['type'] for _file in file_permissions.get('permissions')]:
-            print(f"[+] Default permissions for files is publicly accessible.")
-        else:
-            print(f"[+] Default permissions for files is NOT publicly accessible.")
+            # Checks if 'anyone' appears as one of the permissions types
+            if 'anyone' in [_file['type'] for _file in file_permissions.get('permissions')]:
+                print(f"[+] Default permission for files is publicly accessible.")
+            else:
+                print(f"[+] Default permission for files is NOT publicly accessible.")
+        except HttpError as e:
+            print(f"[+] Error - {e}")
 
     def monitor_drive(self):
         """Main - Monitor the user's Google Drive for new files."""
