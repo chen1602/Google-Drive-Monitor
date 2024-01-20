@@ -39,7 +39,9 @@ This Python script monitors your Google Drive for new files, evaluating their sh
 
 ### Security issues - attack surfaces
 * Authorization Scopes - Excessive permissions could lead to unauthorized access to the drive resources, posing a security risk.
-* Credentials File - To mitigate the risk of the user having to grant permissions each time the application runs, the API employs a token system. If an attacker gains access to the token file, they would have unrestricted access to the drive files without needing knowledge of the user credentials.
+* Users - The API credentails are associated with users. Permissions could lead to unauthorized access to the drive resources
+* Credentials File - To mitigate the experience of the user having to grant permissions each time the application runs, the API employs a token system. If an attacker gains access to the token file, they would have unrestricted access to the drive files without needing knowledge of the user credentials.
+* Command and Control / Data Exfiliration / Staging downloading - The API is disabled by default and requires a setup before using it. The API can be used to communicate with a remote command server and receive data from it. In addion, it can be used to exfilirate data - upload by a victim and downloaded by an attacker or use the API to force a victim downloading a file and execute it, avoiding FW issues.
 
 ### Next steps
 * Using an encryption for the token file with a key supplied by the user. If the key is changed, the app will require the user to allow the permissions again
