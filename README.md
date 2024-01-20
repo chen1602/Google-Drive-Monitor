@@ -37,9 +37,6 @@ This Python script monitors your Google Drive for new files, evaluating their sh
     * Download the JSON file containing your credentials.
     * Rename the file to 'credentials.json' and put it in the project directory
 
-### Usage
-
-
 ### Security issues - attack surfaces
 * Authorization Scopes - Excessive permissions could lead to unauthorized access to the drive resources, posing a security risk.
 * Credentials File - To mitigate the risk of the user having to grant permissions each time the application runs, the API employs a token system. If an attacker gains access to the token file, they would have unrestricted access to the drive files without needing knowledge of the user credentials.
